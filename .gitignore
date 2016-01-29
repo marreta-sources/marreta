@@ -1,0 +1,5 @@
+# .gitignore files to repository
+
+/.idea/*
+*.pyc
+vcs.xml
