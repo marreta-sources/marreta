@@ -1,5 +1,8 @@
 # .gitignore files to repository
 
-/.idea/*
 *.pyc
-vcs.xml
+*egg-info
+.tox
+build
+dist
+.idea/
