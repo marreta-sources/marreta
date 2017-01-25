@@ -1,0 +1,22 @@
+{{extend 'layout.html'}}
+
+{{block header}}
+    <header class="container-fluid background">
+      <div class="jumbotron text-center">
+        {{if response.title:}}
+        <h1>{{=response.title}}
+          <small>{{=response.subtitle or ''}}</small></h1>
+        {{pass}}
+      </div>
+    </header>
+{{end}}
+
+{{if 'message' in globals():}}
+<h2>{{=message}}</h2>
+<h3>- <a href="/marreta/admin">Marreta Administration</a></h3>
+<h3>- User password request</h3>
+{{elif 'content' in globals():}}
+{{=content}}
+{{else:}}
+{{=BEAUTIFY(response._vars)}}
+{{pass}}
