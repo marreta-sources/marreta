@@ -128,7 +128,8 @@ auth.settings.reset_password_requires_verification = True
 
 db.define_table('dc',
                 Field('dc', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Field'))
+                    error_message= 'Required Field')),
+                Field('description', 'string')
                 )
 
 db.define_table('system_type',
@@ -167,6 +168,15 @@ db.define_table('auth_dc_membership',
                     db, db.auth_user, '%(first_name)s %(last_name)s',
                     error_message='Required Field')),
                 Field('dc', 'string', requires=IS_IN_DB(
+                    db, db.dc, '%(dc)s', error_message='Required Filed')),
+                format='%(dc)s'
+                )
+
+db.define_table('auth_dc_approvers',
+                Field('auth_id', 'string', requires=IS_IN_DB(
+                    db, db.auth_user, '%(first_name)s %(last_name)s',
+                    error_message='Required Field')),
+                Field('dc', 'string', requires=IS_IN_DB(
                     db, db.dc, '%(dc)s', error_message='Required Filed'))
                 )
 
@@ -182,14 +192,12 @@ if db(db.auth_user).isempty():
                         password=db.auth_user.password.validate('abc1234')[0])
 
 if db(db.auth_group).isempty():
-    db.auth_group.insert(role='marreta_admin',
+    db.auth_group.insert(role='Marreta Administrator',
                          description='Marreta Administrator Group')
-    db.auth_group.insert(role='dc_admin',
-                         description='Data Center Administrator Group')
-    db.auth_group.insert(role='ci_admin',
-                         description='Configuration Item Administrator Group')
-    db.auth_group.insert(role='marreta_user',
+    db.auth_group.insert(role='Marreta User',
                          description='Marreta User Group')
+    db.auth_group.insert(role='Data Center Administrator',
+                         description='Data Center Administrator Group')
 
 if db(db.auth_membership).isempty():
     db.auth_membership.insert(user_id=1,
