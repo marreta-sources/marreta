@@ -4,6 +4,7 @@
 # This scaffolding model makes your app work on Google App Engine too
 # File is released under public domain and you can use without limitations
 # -------------------------------------------------------------------------
+from datetime import datetime
 
 if request.global_settings.web2py_version < "2.14.1":
     raise HTTP(500, "Requires web2py 2.13.3 or newer")
@@ -126,50 +127,28 @@ auth.settings.reset_password_requires_verification = True
 # >>> for row in rows: print row.id, row.myfield
 # -------------------------------------------------------------------------
 
-db.define_table('dc',
-                Field('dc', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Field')),
-                Field('description', 'string')
+
+db.define_table('DataCenter',
+                Field('DC', 'string', length=255, requires=IS_NOT_EMPTY(error_message='Required Field'),
+                      unique=True, notnull=True),
+                Field('DCInfo', 'string', requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
                 )
 
-db.define_table('system_type',
-                Field('system_type', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Field'))
+db.define_table('SystemType',
+                Field('SystemType', 'string', requires=IS_NOT_EMPTY(
+                    error_message='Required Field'), notnull=True),
+                Field('DescSystemsType', 'string', requires=IS_NOT_EMPTY(
+                    error_message='Required Field'), notnull=True),
                 )
 
-db.define_table('ci',
-                Field('ci', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Field')),
-                Field('hostname', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Field')),
-                Field('ip_address', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Filed')),
-                Field('system_type', 'string', requires=IS_IN_DB(
-                    db, db.system_type.system_type, '%(system_type)s',
-                    error_message='Required Filed')),
-                Field('dc', 'string', requires=IS_IN_DB(
-                    db, db.dc.dc, '%(dc)s',
-                    error_message='Required Field'))
-                )
-
-db.define_table('user_management',
-                Field('username', 'string', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Field')),
-                Field('password', 'password', requires=[IS_NOT_EMPTY(
-                    error_message= 'Required Field'),CRYPT()]),
-                Field('last_change', 'datetime', requires=IS_NOT_EMPTY(
-                    error_message= 'Required Filed')),
-                Field('ci', 'string', requires=IS_IN_DB(
-                    db, db.ci.ci, '%(ci)s', error_message='Required Field'))
-                )
 
 db.define_table('auth_dc_membership',
                 Field('auth_id', 'string', requires=IS_IN_DB(
                     db, db.auth_user, '%(first_name)s %(last_name)s',
-                    error_message='Required Field')),
+                    error_message='Required Field'), notnull=True),
                 Field('dc', 'string', requires=IS_IN_DB(
-                    db, db.dc, '%(dc)s', error_message='Required Filed')),
-                format='%(dc)s'
+                    db, db.DataCenter, '%(DC)s', error_message='Required Filed')),
+                format='%(DC)s'
                 )
 
 db.define_table('auth_dc_approvers',
@@ -177,7 +156,36 @@ db.define_table('auth_dc_approvers',
                     db, db.auth_user, '%(first_name)s %(last_name)s',
                     error_message='Required Field')),
                 Field('dc', 'string', requires=IS_IN_DB(
-                    db, db.dc, '%(dc)s', error_message='Required Filed'))
+                    db, db.DataCenter, '%(DC)s', error_message='Required Filed'))
+                )
+
+db.define_table('ConfigurationItem',
+                Field('CI', 'string', length=255,
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('Hostname', 'string',
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('HostAdress', 'string',
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('SystemType', 'reference SystemType', ondelete = "SET NULL",
+                      requires = IS_IN_DB(db, db.SystemType.SystemType)),
+                Field('DC', 'reference DataCenter', ondelete="SET NULL",
+                      requires = IS_IN_DB(db, db.DataCenter.id)),
+                Field('AddedDate', 'datetime',
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('ServerStatus', 'integer', default=2,
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('LastServerCHK', 'datetime'),
+                )
+
+db.define_table('ServerCredentials',
+                Field('CIID', 'reference ConfigurationItem',
+                      requires=IS_IN_DB(db, db.ConfigurationItem.id)),
+                Field('Username', 'string', length=255,
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('Password', 'string',
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
+                Field('LastPwdChanged', 'datetime',
+                      requires=IS_NOT_EMPTY(error_message='Required Field'), notnull=True),
                 )
 
 # -------------------------------------------------------------------------
@@ -203,6 +211,6 @@ if db(db.auth_membership).isempty():
     db.auth_membership.insert(user_id=1,
                               group_id=1)
 
-if db(db.system_type).isempty():
-    db.system_type.insert(system_type='GNU/Linux')
-    db.system_type.insert(system_type='AIX')
+if db(db.SystemType).isempty():
+    db.SystemType.insert(SystemType='GNU/Linux')
+    db.SystemType.insert(SystemType='AIX')

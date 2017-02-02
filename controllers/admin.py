@@ -114,8 +114,9 @@ def manage_dc_membership():
 #
 @auth.requires(auth.has_membership('Marreta Administrator'))
 def add_dc():
-    form = SQLFORM(db.dc, submit_button='Save',
-            labels={'dc':'Data Center Name'})
+    form = SQLFORM(db.DataCenter, submit_button='Save',
+            labels={'DC':'Data Center', 'DCInfo': 'Data Center information'},
+                   )
     if form.process().accepted:
         response.flash = 'Data Center {} added !'.format(form.vars.dc)
     elif form.errors:
@@ -131,12 +132,12 @@ def list_dcs():
     current_user = auth.user_id
     # get the current logged user groups ids (list)
     current_user_groups = auth.user_groups.values()
-    btn = lambda row: A("Edit", _href=URL('manage_dc', args=row.dc.id))
-    db.dc.edit = Field.Virtual(btn)
+    btn = lambda row: A("Edit", _href=URL('manage_dc', args=row.DataCenter.id))
+    db.DataCenter.edit = Field.Virtual(btn)
 
     # list only datacenters that the user is member
     if 'Marreta Administrator' in current_user_groups:
-        rows = db(db.dc).select()
+        rows = db(db.DataCenter).select()
     else:
         # get the list of datacenters membership of current logged user
         dc_member = db(db.auth_dc_membership.auth_id == current_user).select()
@@ -144,10 +145,10 @@ def list_dcs():
         for dc in dc_member:
             dc_list.append(int(dc.dc))
 
-        rows = db(db.dc.id.belongs(dc_list)).select()
+        rows = db(db.DataCenter.id.belongs(dc_list)).select()
 
     headers = ["ID", "Data Center Name", "Edit"]
-    fields = ['id', 'dc', "edit"]
+    fields = ['id', 'DC', "edit"]
     table = TABLE(THEAD(TR(*[B(header) for header in headers])),
                   TBODY(*[TR(*[TD(row[field]) for field in fields]) \
                         for row in rows]))
@@ -178,7 +179,7 @@ def manage_dc():
     dc_id = request.args(0) or redirect(URL('list_dcs'))
     # shows the editable form only if the user is datacenter admin of this dc
     if 'Marreta Administrator' in current_user_groups or int(dc_id) in dc_list:
-        form = SQLFORM(db.dc, dc_id, deletable=deletable_value).process()
+        form = SQLFORM(db.DataCenter, dc_id, deletable=deletable_value).process()
     else:
         form = 'User not allowed to manage this Data Center.'
 
@@ -210,7 +211,14 @@ def manage_approvers():
 #
 @auth.requires(auth.has_membership('Marreta Administrator'))
 def add_ci():
-    form = SQLFORM(db.ci, submit_button='Save')
+    form = SQLFORM(db.ConfigurationItem, submit_button='Save',
+                    labels={'CI': 'Configuration Item', 'DC': 'Data Center', 'AddedDate' : 'Added Date',
+                            'ServerStatus' : 'Server Status', 'LastServerCHK' : 'Last Server Check'
+                            },
+                   )
+    # TODO: Form should not show options to fillup Server Status, LastServerChk or AddedDate.
+    # TODO: This should be filled by appliacion itself.
+
     """
      is necessary add here the functions using the MARRETA Engine
     """
